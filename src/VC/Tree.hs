@@ -21,10 +21,9 @@ check dir = do
          return $ summary dir (files == []) managed
 
 checkVCDir :: [FilePath] -> Bool
-checkVCDir = checkGitDir
-
-checkGitDir :: [FilePath] -> Bool
-checkGitDir = elem ".git" . map basename
+checkVCDir xs = let names = map basename xs in
+  any (`elem` names)
+  [ ".git", "_darcs", ".hg", ".svn", "CVS", ".fslckout"]
 
 data Managed =
   UnManaged FilePath
