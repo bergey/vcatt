@@ -18,5 +18,5 @@ main = do
         [] -> "."
         (d:_) -> fromText $ T.pack d
   shelly $ do
-    fps <- check path
+    fps <- directories <$> check path
     traverse_ (echo <=< toTextWarn) fps

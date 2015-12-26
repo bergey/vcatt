@@ -9,21 +9,16 @@ import           Control.Monad.Extra
 
 import           Prelude             hiding (FilePath)
 
-check :: FilePath -> Sh [FilePath]
+check :: FilePath -> Sh Managed
 check dir = do
   names <- ls dir
   if checkVCDir names
-    then return []
+    then return Managed
     else do
+    -- TODO exclude symlinks from files
          (subdirs, files) <- partitionM test_d =<< ls dir
-         unmanaged <- traverse check subdirs
-         let  topFiles fps = case files of
-                 [] -> fps
-                 _ -> dir : fps
-         return $ case summary unmanaged of
-           AllManaged -> topFiles []
-           NoneManaged -> [dir]
-           SomeManaged -> topFiles $ concat unmanaged
+         managed <- traverse check subdirs
+         return $ summary dir (files == []) managed
 
 checkVCDir :: [FilePath] -> Bool
 checkVCDir = checkGitDir
@@ -31,22 +26,39 @@ checkVCDir = checkGitDir
 checkGitDir :: [FilePath] -> Bool
 checkGitDir = elem ".git" . map basename
 
-data Managed = NoneManaged | AllManaged | SomeManaged
+data Managed =
+  UnManaged FilePath
+  | Managed
+  | Empty
+  | SomeManaged [FilePath]
 
-isManaged :: [filePath] -> Bool
-isManaged [] = True
+summary :: FilePath -> Bool -> [Managed] -> Managed
+summary dir nofiles xs
+  | all isEmpty xs = if nofiles
+                     then Empty
+                     else UnManaged dir
+  | all isManaged xs = if nofiles then Managed
+                       else UnManaged dir
+  | all isUnmanaged xs = UnManaged dir
+  | otherwise = SomeManaged $ if nofiles
+                then concatMap directories xs
+                else dir : concatMap directories xs
+
+isEmpty :: Managed -> Bool
+isEmpty Empty = True
+isEmpty _ = False
+
+isManaged :: Managed-> Bool
+isManaged Managed = True
+isManaged Empty = True
 isManaged _ = False
 
-isUnmanaged :: [filePath] -> Bool
-isUnmanaged [_] = True
+isUnmanaged :: Managed -> Bool
+isUnmanaged (UnManaged _) = True
+isUnmanaged Empty = True
 isUnmanaged _ = False
 
-isHybrid :: [filePath] -> Bool
-isHybrid [] = False
-isHybrid [_] = False
-isHybrid _ = True
-
-summary :: [[filePath]] -> Managed
-summary xs | all isManaged xs = AllManaged
-summary xs | all isUnmanaged xs = NoneManaged
-summary _ = SomeManaged
+directories :: Managed -> [FilePath]
+directories (SomeManaged ds) = ds
+directories (UnManaged d) = [d]
+directories _ = []
