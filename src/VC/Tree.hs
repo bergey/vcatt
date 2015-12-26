@@ -16,7 +16,7 @@ check dir = do
     then return Managed
     else do
     -- TODO exclude symlinks from files
-         (subdirs, files) <- partitionM test_d =<< ls dir
+         (subdirs, files) <- partitionDirs =<< ls dir
          managed <- traverse check subdirs
          return $ summary dir (files == []) managed
 
@@ -42,6 +42,12 @@ summary dir nofiles xs
   | otherwise = SomeManaged $ if nofiles
                 then concatMap directories xs
                 else dir : concatMap directories xs
+
+partitionDirs :: [FilePath] -> Sh ([FilePath], [FilePath])
+partitionDirs paths = do
+  (dirs, nondirs) <- partitionM test_d paths
+  files <- filterM (fmap not . test_s) nondirs -- exclude symlinks
+  return (dirs, files)
 
 isEmpty :: Managed -> Bool
 isEmpty Empty = True
