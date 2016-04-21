@@ -19,3 +19,7 @@ Additionally, if a directory contains only subdirectories (no files) and each of
 ## Usage
 
 `vcatt ~/code`
+
+## Contributing
+
+Bug reports and pull requests welcome.
