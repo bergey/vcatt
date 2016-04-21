@@ -1,0 +1,21 @@
+language: haskell
+
+env:
+  matrix:
+    - GHCVER=7.6.3 CABALVER=1.18
+    - GHCVER=7.8.4 CABALVER=1.18
+    - GHCVER=7.10.3 CABALVER=1.22
+    - GHCVER=head CABALVER=head
+
+matrix:
+  allow_failures:
+    - env: GHCVER=head CABALVER=head
+
+before_install:
+  - git clone http://github.com/diagrams/diagrams-travis travis
+  - source travis/scripts/set_env.sh
+  - ./travis/scripts/before_install.sh
+
+install: ./travis/scripts/install.sh
+
+script: ./travis/scripts/script.sh
