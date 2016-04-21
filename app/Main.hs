@@ -14,9 +14,9 @@ import           System.Environment
 main :: IO ()
 main = do
   args <- getArgs
-  let path = case args of
+  let startingPath = case args of
         [] -> "."
         (d:_) -> fromText $ T.pack d
   shelly $ do
-    fps <- directories <$> check path
+    fps <- directories <$> check startingPath
     traverse_ (echo <=< toTextWarn) fps
