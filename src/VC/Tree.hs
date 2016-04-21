@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 
 module VC.Tree where
 
@@ -8,6 +9,10 @@ import           Shelly
 import           Control.Monad.Extra
 
 import           Prelude             hiding (FilePath)
+
+#if __GLASGOW_HASKELL__ < 710
+import           Data.Traversable
+#endif
 
 check :: FilePath -> Sh Managed
 check dir = do
